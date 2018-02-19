@@ -53,10 +53,10 @@ public class Assn3{
                         delete(ftp, contentName);
                         break;
                     case "get":
-                        get(ftp, contentName);
+                        get(ftp, contentName, ".");
                         break;
                     case "put":
-                        put(ftp, contentName);
+                        put(ftp, contentName, ".");
                         break;
                     case "mkdir":
                         makeDirectory(ftp, contentName);
@@ -102,12 +102,12 @@ public class Assn3{
         }
     }
 
-    private static void get(FTPClient ftp, String contentName){
+    private static void get(FTPClient ftp, String contentName, String curDir){
         try{
-            //if receveing a path
-            //extract just the name
-            String[] path = contentName.split("/");
-            String curContentName = path[path.length -1];
+            // //if receveing a path
+            // //extract just the name
+            // String[] path = contentName.split("/");
+            // String curContentName = path[path.length -1];
 
             System.out.println("get/contentName: " + contentName);
             // //grab the content's details
@@ -120,8 +120,8 @@ public class Assn3{
             for(int i = 0; i < directories.length; i++){
                 String[] absDirName = directories[i].getName().split("/"); //split the full path name 
                 String testDirName = absDirName[absDirName.length -1]; //grab just the dir name
-                System.out.println("get/curContentName: " + curContentName + " get/testDirName: "  + testDirName);
-                if(curContentName.compareTo(testDirName) == 0){
+                System.out.println("get/curContentName: " + contentName + " get/testDirName: "  + testDirName);
+                if(contentName.compareTo(testDirName) == 0){
                     System.out.println("setting isDirectory to true");
                     isDirectory = true;
                 }
@@ -130,30 +130,33 @@ public class Assn3{
             if(isDirectory){
                 //if it's a directory
                 //set as the working directory
-                ftp.changeWorkingDirectory(curContentName);
+                changeDirectory(ftp, contentName);
                 //create it in local space
-                File newDir = new File(contentName);
+                File newDir = new File(curDir + "/" + contentName);
                 newDir.mkdirs();
                 //grab each of its
                 //content names and take each down the
                 //rabbit hole, include relative path
                 String[] contentNames = ftp.listNames();
                 for(String nextContentName : contentNames){
-                    String relativeFilePath = contentName + "/" + nextContentName;
-                    System.out.println("get/relativeFilePath: " + relativeFilePath);            //get the parent path
-                    get(ftp, relativeFilePath);
+                    // String relativeFilePath = contentName + "/" + nextContentName;
+                    // System.out.println("get/relativeFilePath: " + relativeFilePath);            //get the parent path
+                    //form the next working directory
+                    String nextDir = curDir + "/" + contentName;
+                    get(ftp, nextContentName, nextDir);
                 }
 
                 //coming back up from recursion
                 //set working directory to parent
-                ftp.changeToParentDirectory();
+                changeDirectory(ftp, "..");
                 
             }
             else{
                 //if it's a file, download it
-                File file = new File(contentName);
+                File file = new File(curDir + "/" + contentName);
                 FileOutputStream outStream = new FileOutputStream(file);
-                ftp.retrieveFile(curContentName, (OutputStream) outStream);
+                ftp.retrieveFile(contentName, (OutputStream) outStream);
+                outStream.close();
             }
         }catch(Exception e){
             e.printStackTrace();
@@ -182,11 +185,42 @@ public class Assn3{
         }
     }
 
-    private static void put(FTPClient ftp, String fileName){
+    private static void put(FTPClient ftp, String contentName, String curDir){
         try{
-            File file = new File(fileName);
-            FileInputStream inStream = new FileInputStream(file);
-            ftp.storeFile(fileName, inStream);
+            //create a File object using contentName
+            File file = new File(curDir + "/" + contentName);
+            //keep track of whether current content is a directory
+            boolean isDirectory = file.isDirectory();
+
+            System.out.println("put/isDirectory: " + isDirectory);
+            if(isDirectory){
+                //if it's a directory
+                //make the directory in remote server
+                makeDirectory(ftp, contentName);
+                //set as the working directory
+                changeDirectory(ftp, contentName);
+                //grab each of its
+                //content names in local dir and take each down the
+                //rabbit hole
+                String[] contentNames = file.list();
+                for(String nextContentName : contentNames){
+                    //form the next working dir
+                    String nextDir = curDir + "/" + contentName;
+                    put(ftp, nextContentName, nextDir);
+                }
+                //coming back up from recursion
+                //set working directory to parent
+                changeDirectory(ftp, "..");
+                
+            }
+            else{
+                //create the new File and inputStream
+                // store it in remote server
+                File newFile = new File(contentName);
+                FileInputStream inStream = new FileInputStream(newFile);
+                ftp.storeFile(curDir + "/" contentName, inStream);
+                inStream.close();
+            }
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -215,14 +249,14 @@ public class Assn3{
                 ftp.changeWorkingDirectory(contentName);
                 //grab each of its
                 //content names and take each down the
-                //rabbit hole, include relative path
+                //rabbit hole
                 String[] contentNames = ftp.listNames();
                 for(String nextContentName : contentNames){
                     removeDirectory(ftp, nextContentName);
                 }
                 //coming back up from recursion
                 //set working directory to parent
-                ftp.changeToParentDirectory();
+                changeDirectory(ftp, "..");
                 //remove the emptied directory
                 ftp.removeDirectory(contentName);
                 
