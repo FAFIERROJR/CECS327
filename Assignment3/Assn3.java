@@ -109,6 +109,9 @@ public class Assn3{
             // String[] path = contentName.split("/");
             // String curContentName = path[path.length -1];
 
+            //form the relative local filepath
+            String filepath = curDir + "/" + contentName;
+
             System.out.println("get/contentName: " + contentName);
             // //grab the content's details
             // FTPFile curFile = ftp.mlistFile(contentName);
@@ -132,7 +135,7 @@ public class Assn3{
                 //set as the working directory
                 changeDirectory(ftp, contentName);
                 //create it in local space
-                File newDir = new File(curDir + "/" + contentName);
+                File newDir = new File(filepath);
                 newDir.mkdirs();
                 //grab each of its
                 //content names and take each down the
@@ -141,9 +144,8 @@ public class Assn3{
                 for(String nextContentName : contentNames){
                     // String relativeFilePath = contentName + "/" + nextContentName;
                     // System.out.println("get/relativeFilePath: " + relativeFilePath);            //get the parent path
-                    //form the next working directory
-                    String nextDir = curDir + "/" + contentName;
-                    get(ftp, nextContentName, nextDir);
+                    //recur
+                    get(ftp, nextContentName, filepath);
                 }
 
                 //coming back up from recursion
@@ -153,7 +155,7 @@ public class Assn3{
             }
             else{
                 //if it's a file, download it
-                File file = new File(curDir + "/" + contentName);
+                File file = new File(filepath);
                 FileOutputStream outStream = new FileOutputStream(file);
                 ftp.retrieveFile(contentName, (OutputStream) outStream);
                 outStream.close();
@@ -187,8 +189,10 @@ public class Assn3{
 
     private static void put(FTPClient ftp, String contentName, String curDir){
         try{
+            //form the relative local filepath
+            String filepath = curDir + "/" + contentName;
             //create a File object using contentName
-            File file = new File(curDir + "/" + contentName);
+            File file = new File(filepath);
             //keep track of whether current content is a directory
             boolean isDirectory = file.isDirectory();
 
@@ -216,9 +220,9 @@ public class Assn3{
             else{
                 //create the new File and inputStream
                 // store it in remote server
-                File newFile = new File(contentName);
+                File newFile = new File(filepath);
                 FileInputStream inStream = new FileInputStream(newFile);
-                ftp.storeFile(curDir + "/" contentName, inStream);
+                ftp.storeFile(contentName, inStream);
                 inStream.close();
             }
         }catch(Exception e){
