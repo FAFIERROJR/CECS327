@@ -28,21 +28,13 @@ public class Assn3{
 
             for(int i = 2; i < args.length; i++){
 
-                //split each command into tokens
-                //will split a content's name if it contains spaces
-                String[] tokens = args[i].split(" ");
-
-                //put file/directory back together if it contained spaces
-                String contentName = "";
-                for(int j = 1; j < tokens.length; j++){
-                    if(j > 1){
-                        contentName += " ";
-                    }
-                    contentName += tokens[j];
-                }
-
+                //parse each command statement
+                String[] parsedCommand = parseCommand(args[i]);
+                String cmd = parsedCommand[0];
+                String path = parsedCommand[1];
+                String contentName = parsedCommand[2];
                 //switch according to the command
-                switch(tokens[0]){
+                switch(cmd){
                     case "ls":
                         listDirectory(ftp);
                         break;
@@ -53,10 +45,10 @@ public class Assn3{
                         delete(ftp, contentName);
                         break;
                     case "get":
-                        get(ftp, contentName, ".");
+                        get(ftp, contentName, path);
                         break;
                     case "put":
-                        put(ftp, contentName, ".");
+                        put(ftp, contentName, path);
                         break;
                     case "mkdir":
                         makeDirectory(ftp, contentName);
@@ -104,11 +96,6 @@ public class Assn3{
 
     private static void get(FTPClient ftp, String contentName, String curDir){
         try{
-            // //if receveing a path
-            // //extract just the name
-            // String[] path = contentName.split("/");
-            // String curContentName = path[path.length -1];
-
             //form the relative local filepath
             String filepath = curDir + "/" + contentName;
 
@@ -187,9 +174,37 @@ public class Assn3{
         }
     }
 
+    private static String[] parseCommand(String commandString){
+        String[] parsedCommand = new String[3];
+        //separate command and file/directory path
+        String[] cmdAndPath = commandString.split(" ", 2);
+        //split path into its separate directories/filename
+        //only if it is a command other than ls
+        if(cmdAndPath.length > 1){
+            String[] path = cmdAndPath[1].split("/");
+            //build back the path where file/dir is located
+            String contentDir = "";
+            for(int i = 0; i < path.length - 1; i++){
+                contentDir += path[i] + "/";
+            }
+            //if contentDir is still "", then it is a local file/dir
+            //make content dir "."
+            if(contentDir == ""){
+                contentDir = ".";
+            }
+            //return command, path where file/dir is located
+            //and file/dir as separate strings
+            String contentName = path[path.length -1];
+            parsedCommand[1] = contentDir;
+            parsedCommand[2] = contentName;
+        }
+        parsedCommand[0] = cmdAndPath[0];
+
+        return parsedCommand;
+    }
+
     private static void put(FTPClient ftp, String contentName, String curDir){
         try{
-            //form the relative local filepath
             String filepath = curDir + "/" + contentName;
             //create a File object using contentName
             File file = new File(filepath);
