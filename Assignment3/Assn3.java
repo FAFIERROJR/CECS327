@@ -81,7 +81,7 @@ public class Assn3{
             //change to the given directory
             ftp.changeWorkingDirectory(directoryName);
         }catch(Exception e){
-            System.out.println("Operations failed: ");
+            // System.out.println("Operations failed: ");
             e.printStackTrace();
         }
     }
@@ -99,7 +99,11 @@ public class Assn3{
             //form the relative local filepath
             String filepath = curDir + "/" + contentName;
 
-            System.out.println("get/contentName: " + contentName);
+            //if cur dir is not null
+            //needs to be made the cur dir
+            changeDirectory(ftp, curDir);
+
+            // System.out.println("get/contentName: " + contentName);
             // //grab the content's details
             // FTPFile curFile = ftp.mlistFile(contentName);
             //grab list of directories in current dir
@@ -110,13 +114,13 @@ public class Assn3{
             for(int i = 0; i < directories.length; i++){
                 String[] absDirName = directories[i].getName().split("/"); //split the full path name 
                 String testDirName = absDirName[absDirName.length -1]; //grab just the dir name
-                System.out.println("get/curContentName: " + contentName + " get/testDirName: "  + testDirName);
+                // System.out.println("get/curContentName: " + contentName + " get/testDirName: "  + testDirName);
                 if(contentName.compareTo(testDirName) == 0){
                     System.out.println("setting isDirectory to true");
                     isDirectory = true;
                 }
             }
-            System.out.println("get/isDirectory: " + isDirectory);
+            // System.out.println("get/isDirectory: " + isDirectory);
             if(isDirectory){
                 //if it's a directory
                 //set as the working directory
@@ -181,7 +185,7 @@ public class Assn3{
         //split path into its separate directories/filename
         //only if it is a command other than ls
         if(cmdAndPath.length > 1){
-            String[] path = cmdAndPath[1].split("/");
+            String[] path = cmdAndPath[1].trim().split("/");
             //build back the path where file/dir is located
             String contentDir = "";
             for(int i = 0; i < path.length - 1; i++){
@@ -211,7 +215,7 @@ public class Assn3{
             //keep track of whether current content is a directory
             boolean isDirectory = file.isDirectory();
 
-            System.out.println("put/isDirectory: " + isDirectory);
+            // System.out.println("put/isDirectory: " + isDirectory);
             if(isDirectory){
                 //if it's a directory
                 //make the directory in remote server
@@ -255,13 +259,13 @@ public class Assn3{
             for(int i = 0; i < directories.length; i++){
                 String[] absDirName = directories[i].getName().split("/"); //split the full path name 
                 String testDirName = absDirName[absDirName.length -1]; //grab just the dir name
-                System.out.println("rm/curContentName: " + contentName + " rm/testDirName: "  + testDirName);
+                // System.out.println("rm/curContentName: " + contentName + " rm/testDirName: "  + testDirName);
                 if(contentName.compareTo(testDirName) == 0){
-                    System.out.println("setting isDirectory to true");
+                    // System.out.println("setting isDirectory to true");
                     isDirectory = true;
                 }
             }
-            System.out.println("rm/isDirectory: " + isDirectory);
+            // System.out.println("rm/isDirectory: " + isDirectory);
             if(isDirectory){
                 //if it's a directory
                 //set as the working directory
