@@ -7,7 +7,6 @@ import java.io.File;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPClientConfig;
 import org.apache.commons.net.ftp.FTPFile;
-
 public class Assn3{
     public static void main(String[] args){
         //print usage if bad command
@@ -39,10 +38,10 @@ public class Assn3{
                         listDirectory(ftp);
                         break;
                     case "cd":
-                        changeDirectory(ftp, contentName);
+                        changeDirectory(ftp, contentName, path);
                         break;
                     case "delete":
-                        delete(ftp, contentName);
+                        delete(ftp, contentName, path);
                         break;
                     case "get":
                         get(ftp, contentName, path);
@@ -51,10 +50,10 @@ public class Assn3{
                         put(ftp, contentName, path);
                         break;
                     case "mkdir":
-                        makeDirectory(ftp, contentName);
+                        makeDirectory(ftp, contentName, path);
                         break;
                     case "rmdir":
-                        removeDirectory(ftp, contentName);
+                        removeDirectory(ftp, contentName, path);
                         break;
 
                     default:
@@ -71,24 +70,30 @@ public class Assn3{
         }
     }
 
-    private static void changeDirectory(FTPClient ftp, String directoryName){
+    private static void changeDirectory(FTPClient ftp, String directoryName, String parentDirectory){
         try{
+            String fullpath = parentDirectory + "/" + directoryName;
+            // System.out.println("changeDirectory/fullpath: " + fullpath);
             //go up if ".."
             if(directoryName == ".."){
                 ftp.changeToParentDirectory();
                 return;
             }
             //change to the given directory
-            ftp.changeWorkingDirectory(directoryName);
+            ftp.changeWorkingDirectory(fullpath);
         }catch(Exception e){
             // System.out.println("Operations failed: ");
             e.printStackTrace();
         }
     }
 
-    private static void delete(FTPClient ftp, String fileName){
+    private static void delete(FTPClient ftp, String fileName, String parentDirectory){
         try{
+            String oldDir = ftp.printWorkingDirectory();
+            String fullpath = parentDirectory + "/" + fileName;
+            changeDirectory(ftp, "", parentDirectory);
             ftp.deleteFile(fileName);
+            changeDirectory(ftp, "", oldDir);
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -98,10 +103,14 @@ public class Assn3{
         try{
             //form the relative local filepath
             String filepath = curDir + "/" + contentName;
+            // System.out.println("/get/curDir: " + curDir);
 
-            //if cur dir is not null
-            //needs to be made the cur dir
-            changeDirectory(ftp, curDir);
+            //change working directory to parent directory
+            //in case it is not the current working dir
+            //must set as parent dir
+            changeDirectory(ftp, "", curDir);
+
+            // listDirectory(ftp);
 
             // System.out.println("get/contentName: " + contentName);
             // //grab the content's details
@@ -116,7 +125,7 @@ public class Assn3{
                 String testDirName = absDirName[absDirName.length -1]; //grab just the dir name
                 // System.out.println("get/curContentName: " + contentName + " get/testDirName: "  + testDirName);
                 if(contentName.compareTo(testDirName) == 0){
-                    System.out.println("setting isDirectory to true");
+                    // System.out.println("setting isDirectory to true");
                     isDirectory = true;
                 }
             }
@@ -124,7 +133,7 @@ public class Assn3{
             if(isDirectory){
                 //if it's a directory
                 //set as the working directory
-                changeDirectory(ftp, contentName);
+                changeDirectory(ftp, "", contentName);
                 //create it in local space
                 File newDir = new File(filepath);
                 newDir.mkdirs();
@@ -141,7 +150,7 @@ public class Assn3{
 
                 //coming back up from recursion
                 //set working directory to parent
-                changeDirectory(ftp, "..");
+                changeDirectory(ftp, "..", "");
                 
             }
             else{
@@ -170,9 +179,10 @@ public class Assn3{
         }
     }
 
-    private static void makeDirectory(FTPClient ftp, String directoryName){
+    private static void makeDirectory(FTPClient ftp, String directoryName, String parentDirectory){
+        String fullpath = parentDirectory + "/" + directoryName;
         try{
-            ftp.makeDirectory(directoryName);
+            ftp.makeDirectory(fullpath);
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -189,12 +199,12 @@ public class Assn3{
             //build back the path where file/dir is located
             String contentDir = "";
             for(int i = 0; i < path.length - 1; i++){
-                contentDir += path[i] + "/";
+                contentDir += "/" + path[i];
             }
-            //if contentDir is still "", then it is a local file/dir
-            //make content dir "."
-            if(contentDir == ""){
-                contentDir = ".";
+            //if the path did not start with a slash or dot
+            //make it relative path by adding  "./"
+            if(path[0] != "" && path[0] != "."){
+                contentDir = "." + contentDir;
             }
             //return command, path where file/dir is located
             //and file/dir as separate strings
@@ -210,6 +220,9 @@ public class Assn3{
     private static void put(FTPClient ftp, String contentName, String curDir){
         try{
             String filepath = curDir + "/" + contentName;
+            //change working directory to parent directory
+            //in case it is not the current working dir
+            changeDirectory(ftp, "", curDir);
             //create a File object using contentName
             File file = new File(filepath);
             //keep track of whether current content is a directory
@@ -219,9 +232,9 @@ public class Assn3{
             if(isDirectory){
                 //if it's a directory
                 //make the directory in remote server
-                makeDirectory(ftp, contentName);
+                makeDirectory(ftp, "", contentName);
                 //set as the working directory
-                changeDirectory(ftp, contentName);
+                changeDirectory(ftp, "", contentName);
                 //grab each of its
                 //content names in local dir and take each down the
                 //rabbit hole
@@ -233,7 +246,7 @@ public class Assn3{
                 }
                 //coming back up from recursion
                 //set working directory to parent
-                changeDirectory(ftp, "..");
+                changeDirectory(ftp, "..", "");
                 
             }
             else{
@@ -249,8 +262,12 @@ public class Assn3{
         }
     }
 
-    private static void removeDirectory(FTPClient ftp, String contentName){
+    private static void removeDirectory(FTPClient ftp, String contentName, String parentDirectory){
         try{
+            String fullpath = parentDirectory + "/" + contentName;
+            //change working directory to parent directory
+            //in case it is not the current working dir
+            changeDirectory(ftp, "", parentDirectory);
             //grab list of directories in current dir
             FTPFile[] directories = ftp.listDirectories();
             //keep track of whether current content is a directory
@@ -269,24 +286,24 @@ public class Assn3{
             if(isDirectory){
                 //if it's a directory
                 //set as the working directory
-                ftp.changeWorkingDirectory(contentName);
+                changeDirectory(ftp, "", contentName);
                 //grab each of its
                 //content names and take each down the
                 //rabbit hole
                 String[] contentNames = ftp.listNames();
                 for(String nextContentName : contentNames){
-                    removeDirectory(ftp, nextContentName);
+                    removeDirectory(ftp, nextContentName, fullpath);
                 }
                 //coming back up from recursion
                 //set working directory to parent
-                changeDirectory(ftp, "..");
+                changeDirectory(ftp, "..", "");
                 //remove the emptied directory
                 ftp.removeDirectory(contentName);
                 
             }
             else{
                 //if it's a file, delete it
-                delete(ftp, contentName);
+                delete(ftp, contentName, ".");
             }
         }catch(Exception e){
             e.printStackTrace();
