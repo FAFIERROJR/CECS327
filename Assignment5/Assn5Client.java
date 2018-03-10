@@ -5,6 +5,7 @@ public class Assn5Client{
     public static void main(String args[]){
         if (args.length < 2){
             System.out.println("Usage: java Assn5Client <server ip address> <message>");
+            System.exit(0);
         }
         Socket s = null;
         try{
