@@ -32,6 +32,7 @@ class Connection extends Thread{
     public void run(){
         try{
             String data = in.readUTF();
+            //reverse the string
             String reversedString = "";
             for(int i = data.length() -1; i >= 0; i--){
                 reversedString = reversedString + data.charAt(i);
