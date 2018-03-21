@@ -7,7 +7,6 @@ public class SimpleChat extends ReceiverAdapter{
     JChannel channel;
     String user_name = System.getProperty("user.name", "n/a");
     final List<String> state= new LinkedList<String>();
-    String line;
 
     private void start() throws Exception {
         channel = new JChannel();
@@ -24,7 +23,7 @@ public class SimpleChat extends ReceiverAdapter{
             try{
                 System.out.print("> ");
                 System.out.flush();
-                line = in.readLine().toLowerCase();
+                String line = in.readLine().toLowerCase();
                 if(line.startsWith("quit") || line.startsWith("exit")){
                     break;
                 }
@@ -44,7 +43,7 @@ public class SimpleChat extends ReceiverAdapter{
     }
 
     public void receive(Message msg){
-        line = msg.getSrc() + ": " + msg.getObject();
+        String line = msg.getSrc() + ": " + msg.getObject();
         System.out.println(line);
          synchronized(state) {
              state.add(line);
