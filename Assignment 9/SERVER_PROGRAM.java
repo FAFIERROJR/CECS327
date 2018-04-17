@@ -64,15 +64,18 @@ public class SERVER_PROGRAM{
     }
 
     private static void init_routing_table(Map<String, String> routing_table){
+        routing_table.put("0", ":NA");
         routing_table.put("1", "yyy:x.x.x.x");
         routing_table.put("2", "yyy:x.x.x.x");
         routing_table.put("3", "yyy:x.x.x.x");
         routing_table.put("00", "yy:x.x.x.x");
         routing_table.put("01", "yy:x.x.x.x");
         routing_table.put("02", "yy:x.x.x.x");
+        routing_table.put("03", ":NA");
         routing_table.put("030", "y:x.x.x.x");
         routing_table.put("031", "y:x.x.x.x");
         routing_table.put("032", "y:x.x.x.x");
+        routing_table.put("033", ":NA");
         routing_table.put("0330", ":18.219.103.254");
         routing_table.put("0331", ":52.15.231.72");
         routing_table.put("0332", ":18.216.240.93");
@@ -101,12 +104,13 @@ public class SERVER_PROGRAM{
         char[] requested_id_char_arr = requested_id.toCharArray();
         char[] my_id_char_arr = my_pastry_id.toCharArray();
 
-        String working_key = "" + requested_id.charAt(0);
-        for(int counter = 1; counter < requested_id_char_arr.length; counter++){
+        String working_key = "";
+        for(int counter = 0; counter < requested_id_char_arr.length; counter++){
             if(requested_id_char_arr[counter] == my_id_char_arr[counter]){
                 working_key += my_id_char_arr[counter];
                 continue;
             }else{
+                working_key +=  requested_id_char_arr[counter];
                 break;
             }
         }
@@ -120,7 +124,7 @@ public class SERVER_PROGRAM{
         nearest_node = routing_table.get(key);
         System.out.println(nearest_node);
         if(nearest_node == null){
-            String working_key = key.substring(0, key.length() - 1);
+            String working_key = key;
             try{
                 int right_most_digit = Integer.parseInt("" + key.charAt(key.length() - 1));
                 while(nearest_node == null){
