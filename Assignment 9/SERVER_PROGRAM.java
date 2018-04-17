@@ -17,45 +17,50 @@ public class SERVER_PROGRAM{
 
             aSocket = new DatagramSocket(32710);
             byte[] buffer = new byte[1000];
+
             while(true){
-            DatagramPacket request = new DatagramPacket(buffer, buffer.length);
-            aSocket.receive(request);
+                DatagramPacket request = new DatagramPacket(buffer, buffer.length);
+                aSocket.receive(request);
 
-            String request_string = new String(request.getData());
-            request_string = request_string.trim();
+                String request_string = new String(request.getData());
+                request_string = request_string.trim();
 
-            String reply_string = "";
-            if(!validate_input(request_string)){
-                System.out.print("INVALID REQUEST");
-            
-            }else{
-                reply_string = getNearestNode(request_string, leaf_set, routing_table);;
+                String reply_string = null;
+                if(!validate_input(request_string)){
+                    System.out.print("INVALID REQUEST");
+                    reply_string = "INVALID REQUEST";
+                
+                }else{
+                    reply_string = getNearestNode(request_string, leaf_set, routing_table);
+                    System.out.print(reply_string);
+                }
+
+                DatagramPacket reply = new DatagramPacket(reply_string.getBytes(),
+                    reply_string.getBytes().length, request.getAddress(), request.getPort());
+                aSocket.send(reply);
             }
-
-            DatagramPacket reply = new DatagramPacket(reply_string.getBytes(),
-            request.getLength(), request.getAddress(), request.getPort());
-            aSocket.send(reply);
-        }
         } catch (SocketException e){
             System.out.println("Socket: " + e.getMessage());
         } catch (IOException e) {
             System.out.println("IO: " + e.getMessage());
+        } catch(Exception e){
+            e.printStackTrace();
         } finally {
             if (aSocket != null)
              aSocket.close();}
     }
 
     private static Boolean validate_input(String request){
-        if(request.matches("[0-3]{4}")){
+        if(request.matches("[0-3]{1,4}")){
             return true;
         }
         return false;
     }
     private static void init_leaf_set(Map<String, String> leaf_set){
-        leaf_set.put("0323", "x.x.x.x");
-        leaf_set.put("0330", "18.219.103.254" );
-        leaf_set.put("0332", "18.216.240.93");
-        leaf_set.put("1013", "x.x.x.x");
+        leaf_set.put("0323", ":x.x.x.x");
+        leaf_set.put("0330", ":18.219.103.254" );
+        leaf_set.put("0332", ":18.216.240.93");
+        leaf_set.put("1013", ":x.x.x.x");
     }
 
     private static void init_routing_table(Map<String, String> routing_table){
@@ -68,14 +73,15 @@ public class SERVER_PROGRAM{
         routing_table.put("030", "y:x.x.x.x");
         routing_table.put("031", "y:x.x.x.x");
         routing_table.put("032", "y:x.x.x.x");
-        routing_table.put("0330", "18.219.103.254");
-        routing_table.put("0331", "52.15.231.72");
-        routing_table.put("0332", "18.216.240.93");
+        routing_table.put("0330", ":18.219.103.254");
+        routing_table.put("0331", ":52.15.231.72");
+        routing_table.put("0332", ":18.216.240.93");
     }
 
     private static String getNearestNode(String requested_id, Map<String, String> leaf_set, Map<String, String> routing_table ){
         String nearest_node = null;
         nearest_node = search_leaves(requested_id, leaf_set);
+        System.out.println(nearest_node);
 
         if(nearest_node != null){
             return nearest_node;
@@ -100,9 +106,11 @@ public class SERVER_PROGRAM{
             if(requested_id_char_arr[counter] == my_id_char_arr[counter]){
                 working_key += my_id_char_arr[counter];
                 continue;
+            }else{
+                break;
             }
-            nearest_node = linear_probe(working_key, routing_table);
         }
+        nearest_node = linear_probe(working_key, routing_table);
 
         return nearest_node;
     }
@@ -110,18 +118,22 @@ public class SERVER_PROGRAM{
     private static String linear_probe(String key, Map<String, String> routing_table){
         String nearest_node = null;
         nearest_node = routing_table.get(key);
+        System.out.println(nearest_node);
         if(nearest_node == null){
-            String working_key = key.substring(0, key.length() - 2);
+            String working_key = key.substring(0, key.length() - 1);
             try{
                 int right_most_digit = Integer.parseInt("" + key.charAt(key.length() - 1));
                 while(nearest_node == null){
                     right_most_digit += 1 % key_length;
-                    nearest_node = working_key + right_most_digit + routing_table.get(working_key + right_most_digit);
+                    nearest_node = routing_table.get(working_key + right_most_digit);
                 }
+                nearest_node = working_key + right_most_digit + nearest_node;
+                return nearest_node;
             }catch(Exception e){
                 e.printStackTrace();
             }
         }
+        nearest_node = key + nearest_node;
         return nearest_node;
     }
 }
