@@ -65,20 +65,21 @@ public class SERVER_PROGRAM{
 
     private static void init_routing_table(Map<String, String> routing_table){
         routing_table.put("0", ":NA");
-        routing_table.put("1", "yyy:x.x.x.x");
-        routing_table.put("2", "yyy:x.x.x.x");
-        routing_table.put("3", "yyy:x.x.x.x");
-        routing_table.put("00", "yy:x.x.x.x");
-        routing_table.put("01", "yy:x.x.x.x");
-        routing_table.put("02", "yy:x.x.x.x");
+        routing_table.put("1", "220:52.53.151.57");
+        routing_table.put("2", "331:18.220.68.55");
+        routing_table.put("3", "222:18.188.79.150");
+        routing_table.put("00", "12:18.188.6.10");
+        routing_table.put("01", "11:13.57.206.74");
+        routing_table.put("02", "11:34.209.81.81");
         routing_table.put("03", ":NA");
-        routing_table.put("030", "y:x.x.x.x");
-        routing_table.put("031", "y:x.x.x.x");
-        routing_table.put("032", "y:x.x.x.x");
+        routing_table.put("030", "x:null");
+        routing_table.put("031", "x:null");
+        routing_table.put("032", "1:34.210.105.66");
         routing_table.put("033", ":NA");
         routing_table.put("0330", ":18.219.103.254");
         routing_table.put("0331", ":52.15.231.72");
         routing_table.put("0332", ":18.216.240.93");
+        routing_table.put("0333", ":null");
     }
 
     private static String getNearestNode(String requested_id, Map<String, String> leaf_set, Map<String, String> routing_table ){
@@ -122,9 +123,9 @@ public class SERVER_PROGRAM{
     private static String linear_probe(String key, Map<String, String> routing_table){
         String nearest_node = null;
         nearest_node = routing_table.get(key);
-        System.out.println(nearest_node);
+        System.out.println("initial probe: " + nearest_node);
         if(nearest_node == null){
-            String working_key = key;
+            String working_key = key.substring(0, key.length() - 2);;
             try{
                 int right_most_digit = Integer.parseInt("" + key.charAt(key.length() - 1));
                 while(nearest_node == null){
