@@ -9,15 +9,16 @@ public class CLIENT_PROGRAM{
         rand = new Random();
         
         String requested_id = "";
-        int rounds = 1000;
+        int rounds = 100;
         int cur_round = 0;
         int num_hops_per_round[] = new int[rounds];
 
         while(cur_round < rounds){
             requested_id = getRandId();
             int result = findNode(requested_id);
-            if(result != -1){
+            if(result > 0){
                 num_hops_per_round[cur_round] = result;
+                System.out.println("Success: " + num_hops_per_round[cur_round] + " hops Round: " + cur_round);
                 cur_round += 1;
             }
         }
@@ -44,7 +45,7 @@ public class CLIENT_PROGRAM{
         DatagramSocket aSocket = null;
         try {
             aSocket = new DatagramSocket();
-            aSocket.setSoTimeout(5000);
+            aSocket.setSoTimeout(2000);
             byte [] m = request_id.getBytes();
             InetAddress aHost = InetAddress.getByName(ip_address);
             int serverPort = 32710;
@@ -70,7 +71,7 @@ public class CLIENT_PROGRAM{
     }
 
     private static int findNode(String requested_id){
-        int num_hops = -1;
+        int num_hops = 0;
         String received_id = "";
         String received_ip = my_ip;
         String reply = "";
@@ -78,39 +79,30 @@ public class CLIENT_PROGRAM{
 
         // System.out.println("Requested id:" + requested_id);
 
+        //querying intermediary servers
         do{
             // System.out.println("Received id: " + received_id);
             reply = queryServer(requested_id, received_ip);
 
-            //timeout
-            if(reply == null){
-                return -1;
-            }
-
-            reply = reply.trim();
-
-            //node not found
-            if(reply.equalsIgnoreCase("NULL")){
-                return num_hops;
-            }
-            reply_tokens = reply.split(":");
-
-            if(reply_tokens.length < 2){
-                return -1;
-            }
-
-            if(reply_tokens[1].equalsIgnoreCase("null")){
-                return num_hops;
-            }
-
-            if(received_id.equals(reply_tokens[0])){
+            reply_tokens = parseReply(reply);
+            if(reply_tokens == null){
                 return -1;
             }
             num_hops++;
             
             received_id = reply_tokens[0];
+            if(received_ip.equals(reply_tokens[1])){
+                return -1;
+            }
             received_ip = reply_tokens[1];
+
+            if(received_ip.equalsIgnoreCase("NULL")){
+                return num_hops;
+            }
         }while(!received_id.equals(requested_id));
+
+        reply = queryServer(requested_id, received_ip);
+        reply_tokens = parseReply(reply);
 
         return num_hops;
     }
@@ -125,5 +117,26 @@ public class CLIENT_PROGRAM{
             e.printStackTrace();
         }
     }
+
+    private static String[] parseReply(String reply){
+        //timeout
+        if(reply == null){
+            return null;
+        }
+        reply = reply.replace(" ", "");
+        if(reply.contains("NULL") || reply.contains("null")){
+            String[] reply_tokens = {"NULL", "NULL"};
+            return reply_tokens;
+        }
+        
+        String[] reply_tokens = reply.split(":");
+        if(reply_tokens.length < 2){
+            return null;
+        }
+
+        return reply_tokens;
+    }
+
+
 
 }
