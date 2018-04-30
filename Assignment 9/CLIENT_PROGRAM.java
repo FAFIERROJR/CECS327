@@ -20,7 +20,7 @@ public class CLIENT_PROGRAM{
             int result = 0;
 
             if(requested_id.equals(my_id)){
-                result = 1;
+                result = -1;
             }else{
                 result = findNode(requested_id);
             }
@@ -114,7 +114,6 @@ public class CLIENT_PROGRAM{
         reply = queryServer(requested_id, received_ip);
         reply_tokens = parseReply(reply);
 
-        num_hops++;
         return num_hops;
     }
 
