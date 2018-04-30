@@ -4,18 +4,27 @@ import java.util.*;
 
 public class CLIENT_PROGRAM{
     private static Random rand;
-    private static String my_ip = "52.15.231.72";
+    private static final String my_ip = "52.15.231.72";
+    private static final String my_id = "0331";
+
     public static void main(String args[]){
         rand = new Random();
         
         String requested_id = "";
-        int rounds = 100;
+        int rounds = 1000;
         int cur_round = 0;
         int num_hops_per_round[] = new int[rounds];
 
         while(cur_round < rounds){
             requested_id = getRandId();
-            int result = findNode(requested_id);
+            int result = 0;
+
+            if(requested_id.equals(my_id)){
+                result = 1;
+            }else{
+                result = findNode(requested_id);
+            }
+
             if(result > 0){
                 num_hops_per_round[cur_round] = result;
                 System.out.println("Success: " + num_hops_per_round[cur_round] + " hops Round: " + cur_round);
@@ -81,6 +90,7 @@ public class CLIENT_PROGRAM{
 
         //querying intermediary servers
         do{
+            num_hops++;
             // System.out.println("Received id: " + received_id);
             reply = queryServer(requested_id, received_ip);
 
@@ -88,7 +98,7 @@ public class CLIENT_PROGRAM{
             if(reply_tokens == null){
                 return -1;
             }
-            num_hops++;
+            System.out.println("node: " + requested_id + " hop: " + num_hops);
             
             received_id = reply_tokens[0];
             if(received_ip.equals(reply_tokens[1])){
@@ -104,6 +114,7 @@ public class CLIENT_PROGRAM{
         reply = queryServer(requested_id, received_ip);
         reply_tokens = parseReply(reply);
 
+        num_hops++;
         return num_hops;
     }
 
